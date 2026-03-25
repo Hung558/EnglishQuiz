@@ -56,11 +56,11 @@ export default function UserPage() {
       if (res.ok) {
         setScore(data.score);
         alert(`Nộp bài thành công! Bạn được ${data.score} / ${questions.length} điểm`);
-        
+
         // --- CHỖ THAY ĐỔI CHÍNH ---
         // Reset lại toàn bộ câu trả lời trên giao diện
-        setUserAnswers({}); 
-        
+        setUserAnswers({});
+
         // Cuộn màn hình lên đầu hoặc đến phần hiển thị điểm để người dùng thấy kết quả
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -116,26 +116,30 @@ export default function UserPage() {
                 <span className="text-indigo-600">Câu {index + 1}:</span> {q.questionText}
               </p>
               <div className="space-y-3">
-                {q.options.map(opt => (
+                {q.options.map((opt, optIndex) => (
                   <label
                     key={opt}
-                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${userAnswers[q._id] === opt
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <input
                       type="radio"
                       name={q._id}
                       className="hidden"
-                      checked={userAnswers[q._id] === opt} // Đảm bảo input đồng bộ với state
+                      checked={userAnswers[q._id] === opt}
                       onChange={() => setUserAnswers({ ...userAnswers, [q._id]: opt })}
                     />
-                    <div className={`w-5 h-5 mr-3 rounded-full border-2 flex items-center justify-center ${
-                      userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
-                    }`}>
+
+                    <div className={`w-5 h-5 mr-3 rounded-full border-2 flex items-center justify-center ${userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
+                      }`}>
                       {userAnswers[q._id] === opt && <div className="w-2 h-2 bg-white rounded-full" />}
                     </div>
-                    <span className="font-medium">{opt}</span>
+
+                    <span className="font-medium text-gray-700 lowercase">
+                      <span className="font-bold mr-1">{String.fromCharCode(97 + optIndex)}.</span> {opt}
+                    </span>
                   </label>
                 ))}
               </div>
