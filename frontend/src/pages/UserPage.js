@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, LogOut } from "lucide-react";
+import { CheckCircle, LogOut, History } from "lucide-react"; // Thêm icon History cho đẹp
 import { useNavigate } from "react-router-dom";
 
 export default function UserPage() {
@@ -32,6 +32,7 @@ export default function UserPage() {
   };
 
   const handleSubmitQuiz = async () => {
+    // 1. Kiểm tra nếu chưa trả lời hết
     if (Object.keys(userAnswers).length < questions.length) {
       if (!window.confirm("Bạn chưa trả lời hết tất cả câu hỏi. Vẫn muốn nộp?")) return;
     }
@@ -54,7 +55,14 @@ export default function UserPage() {
       const data = await res.json();
       if (res.ok) {
         setScore(data.score);
-        alert(`Bạn được ${data.score} / ${questions.length} điểm`);
+        alert(`Nộp bài thành công! Bạn được ${data.score} / ${questions.length} điểm`);
+        
+        // --- CHỖ THAY ĐỔI CHÍNH ---
+        // Reset lại toàn bộ câu trả lời trên giao diện
+        setUserAnswers({}); 
+        
+        // Cuộn màn hình lên đầu hoặc đến phần hiển thị điểm để người dùng thấy kết quả
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (error) {
       alert("Lỗi khi nộp bài");
@@ -73,9 +81,9 @@ export default function UserPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/history")}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
-            Xem lịch sử
+            <History size={18} /> Xem lịch sử
           </button>
           <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-medium capitalize">{role}</span>
           <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-700 font-semibold">
@@ -85,6 +93,13 @@ export default function UserPage() {
       </nav>
 
       <div className="max-w-3xl mx-auto mt-8 px-4">
+        {/* Hiển thị điểm ngay phía trên nếu đã có kết quả */}
+        {score !== null && (
+          <div className="mb-8 p-6 bg-green-100 border-2 border-green-500 rounded-2xl text-center animate-bounce-short">
+            <p className="text-2xl font-bold text-green-800">Kết quả vừa nộp: {score} / {questions.length} điểm</p>
+          </div>
+        )}
+
         <div className="flex justify-between items-end mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Bài tập của bạn</h2>
           <p className="text-gray-500">{questions.length} câu hỏi</p>
@@ -92,7 +107,7 @@ export default function UserPage() {
 
         {questions.length === 0 ? (
           <div className="bg-white p-12 text-center rounded-2xl border border-dashed border-gray-300">
-            <p className="text-gray-500 italic">Chưa có câu hỏi nào. Admin chưa thêm câu hỏi.</p>
+            <p className="text-gray-500 italic">Chưa có câu hỏi nào.</p>
           </div>
         ) : (
           questions.map((q, index) => (
@@ -104,18 +119,22 @@ export default function UserPage() {
                 {q.options.map(opt => (
                   <label
                     key={opt}
-                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"
-                      }`}
+                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"
+                    }`}
                   >
                     <input
                       type="radio"
                       name={q._id}
                       className="hidden"
+                      checked={userAnswers[q._id] === opt} // Đảm bảo input đồng bộ với state
                       onChange={() => setUserAnswers({ ...userAnswers, [q._id]: opt })}
                     />
-                    <span className={`w-5 h-5 mr-3 rounded-full border-2 flex items-center justify-center ${userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-500" : "border-gray-300"}`}>
+                    <div className={`w-5 h-5 mr-3 rounded-full border-2 flex items-center justify-center ${
+                      userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
+                    }`}>
                       {userAnswers[q._id] === opt && <div className="w-2 h-2 bg-white rounded-full" />}
-                    </span>
+                    </div>
                     <span className="font-medium">{opt}</span>
                   </label>
                 ))}
@@ -127,16 +146,10 @@ export default function UserPage() {
         {questions.length > 0 && (
           <button
             onClick={handleSubmitQuiz}
-            className="w-full mt-8 py-5 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg"
+            className="w-full mt-8 py-5 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg transition-transform active:scale-95"
           >
-            <CheckCircle size={28} /> NỘP BÀI NGAY
+            <CheckCircle size={28} /> NỘP BÀI VÀ LÀM MỚI
           </button>
-        )}
-
-        {score !== null && (
-          <div className="mt-8 p-8 bg-yellow-50 border-2 border-yellow-300 rounded-2xl text-center">
-            <p className="text-3xl font-bold text-yellow-800">Điểm của bạn: {score} / {questions.length}</p>
-          </div>
         )}
       </div>
     </div>
