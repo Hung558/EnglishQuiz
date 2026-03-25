@@ -187,6 +187,22 @@ app.get('/api/results', verifyToken, async (req, res) => {
     }
 });
 
+// Lấy toàn bộ kết quả của tất cả user (Dành cho Admin)
+app.get('/api/admin/results', verifyToken, async (req, res) => {
+    try {
+        if (req.userRole !== 'admin') {
+            return res.status(403).json({ message: "Quyền truy cập bị từ chối" });
+        }
+        const results = await Result.find()
+            .populate("user", "username") // Lấy thêm tên user từ bảng User
+            .populate("answers.questionId") 
+            .sort({ createdAt: -1 });
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi lấy dữ liệu" });
+    }
+});
+
 // Khởi chạy Server
 const PORT = process.env.PORT || 9999;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
