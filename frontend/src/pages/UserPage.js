@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, LogOut, History } from "lucide-react"; // Thêm icon History cho đẹp
+import { CheckCircle, LogOut, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function UserPage() {
@@ -10,6 +10,16 @@ export default function UserPage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
+
+  // Thuật toán trộn mảng Fisher-Yates
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
 
   useEffect(() => {
     if (!token || role !== "user") {
@@ -25,14 +35,16 @@ export default function UserPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (res.ok) setQuestions(data);
+      if (res.ok) {
+        // TRỘN CÂU HỎI NGAY KHI LẤY VỀ
+        setQuestions(shuffleArray(data));
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
   const handleSubmitQuiz = async () => {
-    // 1. Kiểm tra nếu chưa trả lời hết
     if (Object.keys(userAnswers).length < questions.length) {
       if (!window.confirm("Bạn chưa trả lời hết tất cả câu hỏi. Vẫn muốn nộp?")) return;
     }
@@ -56,12 +68,11 @@ export default function UserPage() {
       if (res.ok) {
         setScore(data.score);
         alert(`Nộp bài thành công! Bạn được ${data.score} / ${questions.length} điểm`);
+
+        // RESET VÀ TRỘN LẠI CÂU HỎI CHO LẦN LÀM TIẾP THEO
+        setUserAnswers({});
+        setQuestions(shuffleArray(questions)); // Trộn lại danh sách hiện tại
         
-        // --- CHỖ THAY ĐỔI CHÍNH ---
-        // Reset lại toàn bộ câu trả lời trên giao diện
-        setUserAnswers({}); 
-        
-        // Cuộn màn hình lên đầu hoặc đến phần hiển thị điểm để người dùng thấy kết quả
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (error) {
@@ -93,10 +104,10 @@ export default function UserPage() {
       </nav>
 
       <div className="max-w-3xl mx-auto mt-8 px-4">
-        {/* Hiển thị điểm ngay phía trên nếu đã có kết quả */}
         {score !== null && (
-          <div className="mb-8 p-6 bg-green-100 border-2 border-green-500 rounded-2xl text-center animate-bounce-short">
+          <div className="mb-8 p-6 bg-green-100 border-2 border-green-500 rounded-2xl text-center">
             <p className="text-2xl font-bold text-green-800">Kết quả vừa nộp: {score} / {questions.length} điểm</p>
+            <p className="text-sm text-green-600 mt-2 italic">(Câu hỏi đã được tự động trộn lại cho lượt làm mới)</p>
           </div>
         )}
 
@@ -116,26 +127,29 @@ export default function UserPage() {
                 <span className="text-indigo-600">Câu {index + 1}:</span> {q.questionText}
               </p>
               <div className="space-y-3">
-                {q.options.map(opt => (
+                {/* TRỘN CẢ THỨ TỰ ĐÁP ÁN (Nếu bạn muốn khó hơn) */}
+                {q.options.map((opt, optIndex) => (
                   <label
                     key={opt}
-                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${userAnswers[q._id] === opt
+                        ? "border-indigo-500 bg-indigo-50"
+                        : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <input
                       type="radio"
                       name={q._id}
                       className="hidden"
-                      checked={userAnswers[q._id] === opt} // Đảm bảo input đồng bộ với state
+                      checked={userAnswers[q._id] === opt}
                       onChange={() => setUserAnswers({ ...userAnswers, [q._id]: opt })}
                     />
-                    <div className={`w-5 h-5 mr-3 rounded-full border-2 flex items-center justify-center ${
-                      userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
-                    }`}>
+                    <div className={`w-5 h-5 mr-3 rounded-full border-2 flex items-center justify-center ${userAnswers[q._id] === opt ? "border-indigo-500 bg-indigo-500" : "border-gray-300"
+                      }`}>
                       {userAnswers[q._id] === opt && <div className="w-2 h-2 bg-white rounded-full" />}
                     </div>
-                    <span className="font-medium">{opt}</span>
+                    <span className="font-medium text-gray-700">
+                       {opt}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -148,7 +162,7 @@ export default function UserPage() {
             onClick={handleSubmitQuiz}
             className="w-full mt-8 py-5 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-3 shadow-lg transition-transform active:scale-95"
           >
-            <CheckCircle size={28} /> NỘP BÀI VÀ LÀM MỚI
+            <CheckCircle size={28} /> NỘP BÀI VÀ TRỘN ĐỀ MỚI
           </button>
         )}
       </div>

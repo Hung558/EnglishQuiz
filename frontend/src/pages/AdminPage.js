@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, PlusCircle, Edit2, Save, X, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { BarChart3 } from "lucide-react";
 
 export default function AdminPage() {
   const [questions, setQuestions] = useState([]);
@@ -132,6 +133,14 @@ export default function AdminPage() {
           <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-700 font-semibold">
             <LogOut size={20} /> Thoát
           </button>
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => navigate("/admin/results")} // 👈 Dùng navigate để chuyển trang
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all"
+            >
+              <BarChart3 size={20} /> Xem kết quả học sinh
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -212,14 +221,14 @@ export default function AdminPage() {
                   className="w-full p-3 border border-green-400 rounded-xl"
                 />
                 <div className="flex gap-3">
-                  <button 
-                    onClick={handleUpdateQuestion} 
+                  <button
+                    onClick={handleUpdateQuestion}
                     className="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
                   >
                     <Save size={20} /> Lưu thay đổi
                   </button>
-                  <button 
-                    onClick={() => setEditingQuestion(null)} 
+                  <button
+                    onClick={() => setEditingQuestion(null)}
                     className="flex-1 bg-gray-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
                   >
                     <X size={20} /> Hủy
@@ -248,7 +257,7 @@ export default function AdminPage() {
                       key={i}
                       className={`p-4 rounded-xl border-2 ${opt === q.correctAnswer ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
                     >
-                      {opt} 
+                      {opt}
                       {opt === q.correctAnswer && <span className="text-green-600 ml-2">(Đáp án đúng)</span>}
                     </div>
                   ))}
